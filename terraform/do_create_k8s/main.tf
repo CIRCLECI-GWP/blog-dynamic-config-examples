@@ -16,7 +16,7 @@ terraform {
   }
 
   backend "remote" {
-    organization = "datapunks"
+    organization = "CircleCI-Author-Program"
     workspaces {
       name = "iac-do"
     }
