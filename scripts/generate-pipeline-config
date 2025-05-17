@@ -114,7 +114,6 @@ jobs:
             export TF_VAR_do_token="$DIGITAL_OCEAN_TOKEN"
             export TF_VAR_cluster_name="$CIRCLE_PROJECT_REPONAME"
             export TF_VAR_do_k8s_slug_ver="1.32.2-do.1"
-            # terraform apply -auto-approve
             terraform apply -var do_token=\$DIGITAL_OCEAN_TOKEN -var cluster_name=\$CLUSTER_NAME -var docker_image=\$DOCKER_IMAGE -auto-approve
             # Save the Load Balancer Public IP Address
             export ENDPOINT="\$(terraform output lb_public_ip)"
