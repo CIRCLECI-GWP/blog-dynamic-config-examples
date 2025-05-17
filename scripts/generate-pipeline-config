@@ -86,7 +86,6 @@ jobs:
             export TF_VAR_do_token="$DIGITAL_OCEAN_TOKEN"
             export TF_VAR_cluster_name="$CIRCLE_PROJECT_REPONAME"
             export TF_VAR_do_k8s_slug_ver="1.32.2-do.1"
-            # terraform apply -auto-approve
             terraform apply -var do_token=\$DIGITAL_OCEAN_TOKEN -var cluster_name=\$CLUSTER_NAME -var do_k8s_slug_ver=\$DO_K8S_SLUG_VER -auto-approve
   deploy_to_k8s:
     docker:
