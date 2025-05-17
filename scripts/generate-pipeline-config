@@ -163,9 +163,6 @@ jobs:
           command: |
             export CLUSTER_NAME=\${CIRCLE_PROJECT_REPONAME}
             export TAG=0.1.<< pipeline.number >>
-            export TF_VAR_do_token="$DIGITAL_OCEAN_TOKEN"
-            export TF_VAR_cluster_name="$CIRCLE_PROJECT_REPONAME"
-            export TF_VAR_do_k8s_slug_ver="1.32.2-do.1"
             cd terraform/do_create_k8s/
             terraform init
             terraform destroy -auto-approve
