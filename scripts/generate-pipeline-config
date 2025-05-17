@@ -167,7 +167,8 @@ jobs:
             export TAG=0.1.<< pipeline.number >>
             cd terraform/do_create_k8s/
             terraform init
-            terraform destroy -var do_token=\$DIGITAL_OCEAN_TOKEN -var cluster_name=\$CLUSTER_NAME -auto-approve
+            terraform destroy -auto-approve
+            # terraform destroy -var do_token=\$DIGITAL_OCEAN_TOKEN -var cluster_name=\$CLUSTER_NAME -auto-approve
 workflows:
   scan_deploy:
     jobs:
