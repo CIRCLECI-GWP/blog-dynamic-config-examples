@@ -77,7 +77,7 @@ jobs:
           name: Create K8s Cluster on DigitalOcean 
           command: |
             export CLUSTER_NAME=\${CIRCLE_PROJECT_REPONAME}
-            export TAG=0.1.<< pipeline.number >>
+            export TAG=0.1.\<< pipeline.number >>
             curl -sL https://github.com/digitalocean/doctl/releases/download/v1.124.0/doctl-1.124.0-linux-amd64.tar.gz | tar -xzv
             sudo mv doctl /usr/local/bin
             doctl version
@@ -88,11 +88,11 @@ jobs:
             export DO_K8S_SLUG_VER="\$(cat /tmp/doctl_output.json | jq -r '.[0] | .slug')"
             echo "DO_K8S_SLUG_VER=\$DO_K8S_SLUG_VER"
             cd terraform/do_create_k8s
-            cat << EOF > terraform.auto.tfvars
+            cat <<EOT > terraform.auto.tfvars
             do_token = "\$DIGITAL_OCEAN_TOKEN"
             cluster_name = "\$CLUSTER_NAME"
             do_k8s_slug_ver = "\$DO_K8S_SLUG_VER"
-            EOF
+            EOT
             export TF_LOG=DEBUG
             terraform apply -auto-approve
   deploy_to_k8s:
@@ -121,11 +121,11 @@ jobs:
             doctl auth init -t \$DIGITAL_OCEAN_TOKEN || true
             doctl kubernetes cluster kubeconfig save \$CLUSTER_NAME
             cd terraform/do_k8s_deploy_app
-            cat << EOF > terraform.auto.tfvars
+            cat <<EOT > terraform.auto.tfvars
             do_token = "\$DIGITAL_OCEAN_TOKEN"
             cluster_name = "\$CLUSTER_NAME"
             docker_image = "\$DOCKER_IMAGE"
-            EOF
+            EOT
             export TF_LOG=DEBUG
             terraform apply -auto-approve
             export ENDPOINT="\$(terraform output lb_public_ip)"
@@ -173,11 +173,11 @@ jobs:
             doctl auth init -t \$DIGITAL_OCEAN_TOKEN || true
             doctl kubernetes cluster kubeconfig save \$CLUSTER_NAME
             cd terraform/do_k8s_deploy_app
-            cat << EOF > terraform.auto.tfvars
+            cat <<EOT > terraform.auto.tfvars
             do_token = "\$DIGITAL_OCEAN_TOKEN"
             cluster_name = "\$CLUSTER_NAME"
             docker_image = "\$DOCKER_IMAGE"
-            EOF
+            EOT
             export TF_LOG=DEBUG
             terraform destroy -auto-approve
       - terraform/init:
@@ -191,10 +191,10 @@ jobs:
             sudo mv doctl /usr/local/bin
             doctl version
             cd terraform/do_create_k8s
-            cat << EOF > terraform.auto.tfvars
+            cat <<EOT > terraform.auto.tfvars
             do_token = "\$DIGITAL_OCEAN_TOKEN"
             cluster_name = "\$CLUSTER_NAME"
-            EOF
+            EOT
             export TF_LOG=DEBUG
             terraform destroy -auto-approve
 workflows:
