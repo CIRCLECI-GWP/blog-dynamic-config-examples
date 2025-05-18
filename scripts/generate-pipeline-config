@@ -11,7 +11,8 @@ orbs:
   docker: circleci/docker@2.8.2
   node: circleci/node@7.1.0
   snyk: snyk/snyk@2.3.0
-  terraform: circleci/terraform@3.6.0  
+  terraform: circleci/terraform@3.6.0
+  kubernetes: circleci/kubernetes@2.0.0
 jobs:
   scan_app:
     docker:
@@ -103,6 +104,7 @@ jobs:
           os: "linux"
       - terraform/init:
           path: ./terraform/do_k8s_deploy_app
+      - kubernetes/install-kubectl    
       - run:
           name: Deploy Application to K8s on DigitalOcean 
           command: |
