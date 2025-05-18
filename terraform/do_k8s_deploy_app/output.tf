@@ -6,6 +6,7 @@ data "kubernetes_service" "app" {
 
 output "do_cluster" {
   value = var.cluster_name
+  sensitive = true
 }
 
 output "lb_public_ip" {
