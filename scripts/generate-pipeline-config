@@ -92,14 +92,14 @@ jobs:
             fi
             cd terraform/do_create_k8s
             # Generate terraform.auto.tfvars
-            cat \<< EOF > terraform.auto.tfvars
-            do_token = "$DIGITAL_OCEAN_TOKEN"
-            cluster_name = "$CLUSTER_NAME"
-            do_k8s_slug_ver = "$DO_K8S_SLUG_VER"
-            EOF
+            # cat \<< EOF > terraform.auto.tfvars
+            # do_token = "$DIGITAL_OCEAN_TOKEN"
+            # cluster_name = "$CLUSTER_NAME"
+            # do_k8s_slug_ver = "$DO_K8S_SLUG_VER"
+            # EOF
             terraform init
-            terraform apply -auto-approve
-            # terraform apply -var do_token=\$DIGITAL_OCEAN_TOKEN -var cluster_name=\$CLUSTER_NAME -var do_k8s_slug_ver=\$DO_K8S_SLUG_VER -auto-approve
+            # terraform apply -auto-approve
+            terraform apply -var do_token=\$DIGITAL_OCEAN_TOKEN -var cluster_name=\$CLUSTER_NAME -var do_k8s_slug_ver=\$DO_K8S_SLUG_VER -auto-approve
   deploy_to_k8s:
     docker:
       - image: cimg/node:24.0.2
