@@ -12,7 +12,7 @@ orbs:
   node: circleci/node@7.1.0
   snyk: snyk/snyk@2.3.0
   terraform: circleci/terraform@3.6.0
-  kubernetes: circleci/kubernetes@2.0.0
+  kubernetes: circleci/kubernetes@1.4.0
 jobs:
   scan_app:
     docker:
