@@ -101,6 +101,8 @@ jobs:
           terraform_version: $TF_VERSION
           arch: "amd64"
           os: "linux"
+      - terraform/init:
+          path: ./terraform/do_create_k8s
       - run:
           name: Deploy Application to K8s on DigitalOcean 
           command: |
