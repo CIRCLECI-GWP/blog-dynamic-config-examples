@@ -83,6 +83,7 @@ jobs:
             export DO_K8S_SLUG_VER="$(doctl kubernetes options versions -o json -t $DIGITAL_OCEAN_TOKEN | jq -r '.[0] | .slug')"
             echo "Checking doctl version:"
             doctl version
+            echo "Checking DIGITAL_OCEAN_TOKEN: ${DIGITAL_OCEAN_TOKEN:0:4}... (hidden)"
             echo "DO_K8S_SLUG_VER=$DO_K8S_SLUG_VER"
             cd terraform/do_create_k8s
             # Generate terraform.auto.tfvars
