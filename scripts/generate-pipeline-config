@@ -84,22 +84,11 @@ jobs:
             doctl kubernetes options versions -o json -t \$DIGITAL_OCEAN_TOKEN | jq -r '.[0].slug'
             K8S_SLUG=\$(doctl kubernetes options versions -o json -t \$DIGITAL_OCEAN_TOKEN | jq -r '.[0].slug')
             echo "K8S_SLUG=\$K8S_SLUG"
-            export DO_K8S_SLUG_VER="\$K8S_SLUG"
-            echo "DO_K8S_SLUG_VER=\$DO_K8S_SLUG_VER"
-            if [ -z "\$DO_K8S_SLUG_VER" ]; then
-              echo "ERROR: DO_K8S_SLUG_VER is empty. Check jq filter and doctl output."
-              exit 1
-            fi
+      - run:
+          name: Terraform Apply (remote backend)
+          command: |
             cd terraform/do_create_k8s
-            # Generate terraform.auto.tfvars
-            # cat \<< EOF > terraform.auto.tfvars
-            # do_token = "$DIGITAL_OCEAN_TOKEN"
-            # cluster_name = "$CLUSTER_NAME"
-            # do_k8s_slug_ver = "$DO_K8S_SLUG_VER"
-            # EOF
-            terraform init
-            # terraform apply -auto-approve
-            terraform apply -var do_token=\$DIGITAL_OCEAN_TOKEN -var cluster_name=\$CLUSTER_NAME -var do_k8s_slug_ver=\$DO_K8S_SLUG_VER -auto-approve
+            terraform apply -auto-approve            
   deploy_to_k8s:
     docker:
       - image: cimg/node:24.0.2
