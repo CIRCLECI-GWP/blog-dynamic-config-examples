@@ -112,9 +112,7 @@ jobs:
             cd terraform/do_k8s_deploy_app
             doctl auth init -t \$DIGITAL_OCEAN_TOKEN
             doctl kubernetes cluster kubeconfig save \$CLUSTER_NAME
-            terraform init
-            # terraform init -reconfigure
-            terraform apply -var do_token=\$DIGITAL_OCEAN_TOKEN -var cluster_name=\$CLUSTER_NAME -var docker_image=\$DOCKER_IMAGE -auto-approve
+            terraform apply -auto-approve
             # Save the Load Balancer Public IP Address
             export ENDPOINT="\$(terraform output lb_public_ip)"
             mkdir -p /tmp/do_k8s/
@@ -160,9 +158,7 @@ jobs:
             cd terraform/do_k8s_deploy_app/
             doctl auth init -t \$DIGITAL_OCEAN_TOKEN
             doctl kubernetes cluster kubeconfig save \$CLUSTER_NAME
-            terraform init
-            # terraform init -reconfigure
-            terraform destroy -var do_token=\$DIGITAL_OCEAN_TOKEN -var cluster_name=\$CLUSTER_NAME -var docker_image=\$DOCKER_IMAGE -auto-approve
+            terraform destroy -auto-approve
       - terraform/init:
           path: ./terraform/do_create_k8s/ 
       - run:
@@ -171,10 +167,7 @@ jobs:
             export CLUSTER_NAME=\${CIRCLE_PROJECT_REPONAME}
             export TAG=0.1.<< pipeline.number >>
             cd terraform/do_create_k8s/
-            terraform init
-            # terraform init -reconfigure
-            # terraform destroy -auto-approve
-            terraform destroy -var do_token=\$DIGITAL_OCEAN_TOKEN -var cluster_name=\$CLUSTER_NAME -auto-approve
+            terraform destroy -auto-approve
 workflows:
   scan_deploy:
     jobs:
