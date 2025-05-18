@@ -130,6 +130,7 @@ jobs:
             export K8S_CLUSTER_CA_CERTIFICATE=\$(kubectl config view --raw -o jsonpath='{.clusters[0].cluster.certificate-authority-data}')
             export K8S_CLUSTER_TOKEN=\$(doctl kubernetes cluster kubeconfig exec-credential --version=v1beta1 --context=\$CLUSTER_NAME | jq -r '.status.token')
 
+
             # Print for verification
             echo "KUBECONFIG is \$KUBECONFIG"
             ls -l \$KUBECONFIG
@@ -142,9 +143,14 @@ jobs:
             echo "K8S_CLUSTER_TOKEN: \$K8S_CLUSTER_TOKEN"
 
             # Export to Terraform environment variables
-            echo "export TF_VAR_k8s_cluster_endpoint=\$K8S_CLUSTER_ENDPOINT" >> \$BASH_ENV
-            echo "export TF_VAR_k8s_cluster_ca_certificate=\$K8S_CLUSTER_CA_CERTIFICATE" >> \$BASH_ENV
-            echo "export TF_VAR_k8s_cluster_token=\$K8S_CLUSTER_TOKEN" >> \$BASH_ENV
+            export TF_VAR_k8s_cluster_endpoint="\$K8S_CLUSTER_ENDPOINT"
+            export TF_VAR_k8s_cluster_ca_certificate="\$K8S_CLUSTER_CA_CERTIFICATE"
+            export TF_VAR_k8s_cluster_token="\$K8S_CLUSTER_TOKEN"
+
+            # Print for verification
+            echo "TF_VAR_k8s_cluster_endpoint: $TF_VAR_k8s_cluster_endpoint"
+            echo "TF_VAR_k8s_cluster_ca_certificate: $TF_VAR_k8s_cluster_ca_certificate"
+            echo "TF_VAR_k8s_cluster_token: $TF_VAR_k8s_cluster_token"
 
             # Initialize and apply Terraform
             cd terraform/do_k8s_deploy_app  
