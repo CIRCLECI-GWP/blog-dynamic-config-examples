@@ -80,13 +80,21 @@ jobs:
             export TAG=0.1.<< pipeline.number >>
             curl -sL https://github.com/digitalocean/doctl/releases/download/v$DOCTL_VERSION/doctl-$DOCTL_VERSION-linux-amd64.tar.gz | tar -xzv
             sudo mv doctl /usr/local/bin
-            echo "Checking doctl version:"
-            doctl version
-            echo "Checking DIGITAL_OCEAN_TOKEN: ${DIGITAL_OCEAN_TOKEN:0:4}... (hidden)"
-            echo "DO_K8S_SLUG_VER=$DO_K8S_SLUG_VER"            
             echo "Fetching Kubernetes versions from DigitalOcean..."
-            doctl kubernetes options versions -o json -t $DIGITAL_OCEAN_TOKEN
-            export DO_K8S_SLUG_VER="$(doctl kubernetes options versions -o json -t $DIGITAL_OCEAN_TOKEN | jq -r '.[0] | .slug')"
+            doctl kubernetes options versions -o json -t $DIGITAL_OCEAN_TOKEN | jq -r '.[0].slug'
+            export DO_K8S_SLUG_VER="$(doctl kubernetes options versions -o json -t $DIGITAL_OCEAN_TOKEN | jq -r '.[0].slug')"
+            echo "DO_K8S_SLUG_VER=$DO_K8S_SLUG_VER"
+            if [ -z "$DO_K8S_SLUG_VER" ]; then
+              echo "ERROR: DO_K8S_SLUG_VER is empty. Check jq filter and doctl output."
+              exit 1
+            fi
+            # echo "Checking doctl version:"
+            # doctl version
+            # echo "Checking DIGITAL_OCEAN_TOKEN: ${DIGITAL_OCEAN_TOKEN:0:4}... (hidden)"
+            # echo "DO_K8S_SLUG_VER=$DO_K8S_SLUG_VER"            
+            # echo "Fetching Kubernetes versions from DigitalOcean..."
+            # doctl kubernetes options versions -o json -t $DIGITAL_OCEAN_TOKEN
+            # export DO_K8S_SLUG_VER="$(doctl kubernetes options versions -o json -t $DIGITAL_OCEAN_TOKEN | jq -r '.[0] | .slug')"
             cd terraform/do_create_k8s
             # Generate terraform.auto.tfvars
             cat \<< EOF > terraform.auto.tfvars
