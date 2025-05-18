@@ -23,5 +23,13 @@ terraform {
   }
 }
 
+data "digitalocean_kubernetes_cluster" "do_cluster" {
+  name = var.cluster_name
+}
+
+
 provider "kubernetes" {
+  host                   = var.k8s_cluster_endpoint
+  token                  = var.k8s_cluster_token
+  cluster_ca_certificate = var.k8s_cluster_ca_certificate
 }

@@ -19,3 +19,21 @@ variable "docker_image" {
   default     = "ariv3ra/nodejs-circleci:latest"
 }
 
+
+
+variable "k8s_cluster_endpoint" {
+  description = "Kubernetes API server endpoint"
+  type        = string
+}
+
+variable "k8s_cluster_token" {
+  description = "Kubernetes API server token"
+  type        = string
+  sensitive   = true
+}
+
+variable "k8s_cluster_ca_certificate" {
+  description = "Kubernetes CA certificate"
+  type        = string
+  sensitive   = true
+}

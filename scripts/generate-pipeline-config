@@ -109,24 +109,48 @@ jobs:
             export CLUSTER_NAME=\${CIRCLE_PROJECT_REPONAME}
             export TAG=0.1.<< pipeline.number >>
             export DOCKER_IMAGE="\${DOCKER_LOGIN}/\${CIRCLE_PROJECT_REPONAME}:\$TAG"
+
+            # Install doctl
             curl -sL https://github.com/digitalocean/doctl/releases/download/v$DOCTL_VERSION/doctl-$DOCTL_VERSION-linux-amd64.tar.gz | tar -xzv
             sudo mv doctl /usr/local/bin
+
+
             # Install kubectl
-            curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+            curl -LO "https://storage.googleapis.com/kubernetes-release/release/\$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
             chmod +x kubectl
-            sudo mv kubectl /usr/local/bin        
+            sudo mv kubectl /usr/local/bin     
+
+            # Authenticate with DigitalOcean   
             doctl auth init -t \$DIGITAL_OCEAN_TOKEN
             doctl kubernetes cluster kubeconfig save \$CLUSTER_NAME
             export KUBECONFIG=\$HOME/.kube/config
+
+            # Extract Kubernetes Cluster Information
+            export K8S_CLUSTER_ENDPOINT=\$(kubectl config view -o jsonpath='{.clusters[0].cluster.server}')
+            export K8S_CLUSTER_CA_CERTIFICATE=\$(kubectl config view --raw -o jsonpath='{.clusters[0].cluster.certificate-authority-data}')
+            export K8S_CLUSTER_TOKEN=\$(doctl kubernetes cluster kubeconfig exec-credential --version=v1beta1 --context=\$CLUSTER_NAME | jq -r '.status.token')
+
+            # Print for verification
             echo "KUBECONFIG is \$KUBECONFIG"
             ls -l \$KUBECONFIG
             cat \$KUBECONFIG
             kubectl config current-context
             kubectl get nodes
             kubectl cluster-info
+            echo "K8S_CLUSTER_ENDPOINT: \$K8S_CLUSTER_ENDPOINT"
+            echo "K8S_CLUSTER_CA_CERTIFICATE: \$K8S_CLUSTER_CA_CERTIFICATE"
+            echo "K8S_CLUSTER_TOKEN: \$K8S_CLUSTER_TOKEN"
+
+            # Export to Terraform environment variables
+            echo "export TF_VAR_k8s_cluster_endpoint=\$K8S_CLUSTER_ENDPOINT" >> \$BASH_ENV
+            echo "export TF_VAR_k8s_cluster_ca_certificate=\$K8S_CLUSTER_CA_CERTIFICATE" >> \$BASH_ENV
+            echo "export TF_VAR_k8s_cluster_token=\$K8S_CLUSTER_TOKEN" >> \$BASH_ENV
+
+            # Initialize and apply Terraform
             cd terraform/do_k8s_deploy_app  
             terraform init
             terraform apply -auto-approve
+            
             # Save the Load Balancer Public IP Address
             export ENDPOINT="\$(terraform output lb_public_ip)"
             mkdir -p /tmp/do_k8s
