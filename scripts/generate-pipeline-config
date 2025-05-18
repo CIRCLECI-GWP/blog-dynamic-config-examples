@@ -118,6 +118,9 @@ jobs:
             doctl auth init -t \$DIGITAL_OCEAN_TOKEN
             doctl kubernetes cluster kubeconfig save \$CLUSTER_NAME
             export KUBECONFIG=\$HOME/.kube/config
+            cat $KUBECONFIG
+            kubectl config current-context
+            kubectl get nodes
             kubectl cluster-info
             cd terraform/do_k8s_deploy_app  
             terraform init
