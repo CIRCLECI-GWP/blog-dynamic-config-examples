@@ -111,10 +111,10 @@ jobs:
             export DOCKER_IMAGE="\${DOCKER_LOGIN}/\${CIRCLE_PROJECT_REPONAME}:\$TAG"
             curl -sL https://github.com/digitalocean/doctl/releases/download/v$DOCTL_VERSION/doctl-$DOCTL_VERSION-linux-amd64.tar.gz | tar -xzv
             sudo mv doctl /usr/local/bin        
-            cd terraform/do_k8s_deploy_app  
             doctl auth init -t \$DIGITAL_OCEAN_TOKEN
             doctl kubernetes cluster kubeconfig save \$CLUSTER_NAME
             export KUBECONFIG=\$HOME/.kube/config
+            cd terraform/do_k8s_deploy_app  
             terraform init
             terraform apply -auto-approve
             # Save the Load Balancer Public IP Address
