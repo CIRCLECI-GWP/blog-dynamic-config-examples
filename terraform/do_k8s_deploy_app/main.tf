@@ -24,5 +24,5 @@ terraform {
 }
 
 provider "kubernetes" {
-  config_path = "/home/circleci/.kube/config"
+  config_path = "/circleci/.kube/config"
 }
