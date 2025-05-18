@@ -118,6 +118,8 @@ jobs:
             doctl auth init -t \$DIGITAL_OCEAN_TOKEN
             doctl kubernetes cluster kubeconfig save \$CLUSTER_NAME
             export KUBECONFIG=\$HOME/.kube/config
+            echo "KUBECONFIG is \$KUBECONFIG"
+            ls -l \$KUBECONFIG
             cat \$KUBECONFIG
             kubectl config current-context
             kubectl get nodes
