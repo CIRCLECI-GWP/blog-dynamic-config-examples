@@ -10,5 +10,6 @@ output "do_cluster" {
 }
 
 output "lb_public_ip" {
-  value = kubernetes_service.app.load_balancer_ingress.0.ip
+  value = data.kubernetes_service.app.status.0.load_balancer.0.ingress.0.ip
+  description = "The public IP address of the DigitalOcean load balancer."
 }
