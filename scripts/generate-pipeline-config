@@ -81,11 +81,12 @@ jobs:
             curl -sL https://github.com/digitalocean/doctl/releases/download/v$DOCTL_VERSION/doctl-$DOCTL_VERSION-linux-amd64.tar.gz | tar -xzv
             sudo mv doctl /usr/local/bin
             echo "Fetching Kubernetes versions from DigitalOcean..."
-            K8S_SLUG=$(doctl kubernetes options versions -o json -t $DIGITAL_OCEAN_TOKEN | jq -r '.[0].slug')
-            echo "K8S_SLUG=$K8S_SLUG"
-            export DO_K8S_SLUG_VER="$K8S_SLUG"
-            echo "DO_K8S_SLUG_VER=$DO_K8S_SLUG_VER"
-            if [ -z "$DO_K8S_SLUG_VER" ]; then
+            doctl kubernetes options versions -o json -t \$DIGITAL_OCEAN_TOKEN | jq -r '.[0].slug'
+            K8S_SLUG=\$(doctl kubernetes options versions -o json -t \$DIGITAL_OCEAN_TOKEN | jq -r '.[0].slug')
+            echo "K8S_SLUG=\$K8S_SLUG"
+            export DO_K8S_SLUG_VER="\$K8S_SLUG"
+            echo "DO_K8S_SLUG_VER=\$DO_K8S_SLUG_VER"
+            if [ -z "\$DO_K8S_SLUG_VER" ]; then
               echo "ERROR: DO_K8S_SLUG_VER is empty. Check jq filter and doctl output."
               exit 1
             fi
