@@ -102,7 +102,7 @@ jobs:
           arch: "amd64"
           os: "linux"
       - terraform/init:
-          path: ./terraform/do_create_k8s
+          path: ./terraform/do_k8s_deploy_app
       - run:
           name: Deploy Application to K8s on DigitalOcean 
           command: |
