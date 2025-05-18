@@ -80,7 +80,9 @@ jobs:
             export TAG=0.1.<< pipeline.number >>
             curl -sL https://github.com/digitalocean/doctl/releases/download/v$DOCTL_VERSION/doctl-$DOCTL_VERSION-linux-amd64.tar.gz | tar -xzv
             sudo mv doctl /usr/local/bin
-            export DO_K8S_SLUG_VER="\$(doctl kubernetes options versions -o json -t \$DIGITAL_OCEAN_TOKEN | jq -r '.[0] | .slug')"
+            export DO_K8S_SLUG_VER="$(doctl kubernetes options versions -o json -t $DIGITAL_OCEAN_TOKEN | jq -r '.[0] | .slug')"
+            echo "Checking doctl version:"
+            doctl version
             echo "DO_K8S_SLUG_VER=$DO_K8S_SLUG_VER"
             cd terraform/do_create_k8s
             # Generate terraform.auto.tfvars
