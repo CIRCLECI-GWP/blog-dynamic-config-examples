@@ -8,7 +8,7 @@ terraform {
     }
     kubernetes = {
       source = "hashicorp/kubernetes"
-      version = "1.13.3"
+      version = ">= 2.25.0"
     }
     local = {
       source = "hashicorp/local"
@@ -24,5 +24,5 @@ terraform {
 }
 
 provider "kubernetes" {
-  config_path = "/circleci/.kube/config"
+  config_path = "~/.kube/config"
 }
