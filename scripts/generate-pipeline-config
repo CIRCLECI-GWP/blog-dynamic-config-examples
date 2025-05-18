@@ -4,8 +4,8 @@ set -o pipefail
 TF_VERSION=$1 #Terraform CLI Version to install
 DOCTL_VERSION=$2 #Digital Ocean CLI Version to install
 
-mkdir -p configs/
-cat <<EOF > configs/generated_config.yml
+mkdir configs/
+cat << EOF > configs/generated_config.yml
 version: 2.1
 orbs:
   docker: circleci/docker@2.8.2
@@ -80,21 +80,11 @@ jobs:
             export TAG=0.1.<< pipeline.number >>
             curl -sL https://github.com/digitalocean/doctl/releases/download/v$DOCTL_VERSION/doctl-$DOCTL_VERSION-linux-amd64.tar.gz | tar -xzv
             sudo mv doctl /usr/local/bin
-            doctl version
-            sudo apt-get update && sudo apt-get install -y jq
-            doctl auth init -t \$DIGITAL_OCEAN_TOKEN || true
-            doctl kubernetes options versions -o json -t \$DIGITAL_OCEAN_TOKEN > /tmp/doctl_output.json
-            cat /tmp/doctl_output.json
-            export DO_K8S_SLUG_VER="\$(cat /tmp/doctl_output.json | jq -r '.[0] | .slug')"
-            echo "DO_K8S_SLUG_VER=\$DO_K8S_SLUG_VER"
+            export DO_K8S_SLUG_VER="\$(doctl kubernetes options versions -o json -t \$DIGITAL_OCEAN_TOKEN | jq -r '.[0] | .slug')"
             cd terraform/do_create_k8s
-cat <<EOT > terraform.auto.tfvars
-do_token = "\$DIGITAL_OCEAN_TOKEN"
-cluster_name = "\$CLUSTER_NAME"
-do_k8s_slug_ver = "\$DO_K8S_SLUG_VER"
-EOT
-            export TF_LOG=DEBUG
-            terraform apply -auto-approve
+            terraform init
+            # terraform init -reconfigure
+            terraform apply -var do_token=\$DIGITAL_OCEAN_TOKEN -var cluster_name=\$CLUSTER_NAME -var do_k8s_slug_ver=\$DO_K8S_SLUG_VER -auto-approve
   deploy_to_k8s:
     docker:
       - image: cimg/node:24.0.2
@@ -107,8 +97,6 @@ EOT
           terraform_version: $TF_VERSION
           arch: "amd64"
           os: "linux"
-      - terraform/init:
-          path: ./terraform/do_k8s_deploy_app
       - run:
           name: Deploy Application to K8s on DigitalOcean 
           command: |
@@ -116,18 +104,14 @@ EOT
             export TAG=0.1.<< pipeline.number >>
             export DOCKER_IMAGE="\${DOCKER_LOGIN}/\${CIRCLE_PROJECT_REPONAME}:\$TAG"
             curl -sL https://github.com/digitalocean/doctl/releases/download/v$DOCTL_VERSION/doctl-$DOCTL_VERSION-linux-amd64.tar.gz | tar -xzv
-            sudo mv doctl /usr/local/bin
-            doctl version
-            doctl auth init -t \$DIGITAL_OCEAN_TOKEN || true
-            doctl kubernetes cluster kubeconfig save \$CLUSTER_NAME
+            sudo mv doctl /usr/local/bin          
             cd terraform/do_k8s_deploy_app
-cat <<EOT > terraform.auto.tfvars
-do_token = "\$DIGITAL_OCEAN_TOKEN"
-cluster_name = "\$CLUSTER_NAME"
-docker_image = "\$DOCKER_IMAGE"
-EOT
-            export TF_LOG=DEBUG
-            terraform apply -auto-approve
+            doctl auth init -t \$DIGITAL_OCEAN_TOKEN
+            doctl kubernetes cluster kubeconfig save \$CLUSTER_NAME
+            terraform init
+            # terraform init -reconfigure
+            terraform apply -var do_token=\$DIGITAL_OCEAN_TOKEN -var cluster_name=\$CLUSTER_NAME -var docker_image=\$DOCKER_IMAGE -auto-approve
+            # Save the Load Balancer Public IP Address
             export ENDPOINT="\$(terraform output lb_public_ip)"
             mkdir -p /tmp/do_k8s/
             echo 'export ENDPOINT='\${ENDPOINT} > /tmp/do_k8s/dok8s-endpoint
@@ -135,6 +119,58 @@ EOT
           root: /tmp/do_k8s
           paths:
             - "*"
+  smoketest_k8s_deployment:
+    docker:
+      - image: cimg/node:24.0.2
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/do_k8s/
+      - run:
+          name: Smoke Test K8s App Deployment
+          command: |
+            source /tmp/do_k8s/dok8s-endpoint
+            ./test/smoke_test \$ENDPOINT              
+  destroy_k8s_cluster:
+    docker:
+      - image: cimg/node:24.0.2
+    steps:
+      - checkout
+      - run:
+          name: Create .terraformrc file locally
+          command: echo "credentials \"app.terraform.io\" {token = \"\$TERRAFORM_TOKEN\"}" > \$HOME/.terraformrc && cat \$HOME/.terraformrc
+      - terraform/install:
+          terraform_version: $TF_VERSION
+          arch: "amd64"
+          os: "linux"
+      - terraform/init:
+          path: ./terraform/do_k8s_deploy_app
+      - run:
+          name: Destroy App Deployment 
+          command: |
+            export CLUSTER_NAME=\${CIRCLE_PROJECT_REPONAME}
+            export TAG=0.1.<< pipeline.number >>
+            export DOCKER_IMAGE="\${DOCKER_LOGIN}/\${CIRCLE_PROJECT_REPONAME}:\$TAG"
+            curl -sL https://github.com/digitalocean/doctl/releases/download/v$DOCTL_VERSION/doctl-$DOCTL_VERSION-linux-amd64.tar.gz | tar -xzv
+            sudo mv doctl /usr/local/bin
+            cd terraform/do_k8s_deploy_app/
+            doctl auth init -t \$DIGITAL_OCEAN_TOKEN
+            doctl kubernetes cluster kubeconfig save \$CLUSTER_NAME
+            terraform init
+            # terraform init -reconfigure
+            terraform destroy -var do_token=\$DIGITAL_OCEAN_TOKEN -var cluster_name=\$CLUSTER_NAME -var docker_image=\$DOCKER_IMAGE -auto-approve
+      - terraform/init:
+          path: ./terraform/do_create_k8s/ 
+      - run:
+          name: Destroy K8s Cluster
+          command: |
+            export CLUSTER_NAME=\${CIRCLE_PROJECT_REPONAME}
+            export TAG=0.1.<< pipeline.number >>
+            cd terraform/do_create_k8s/
+            terraform init
+            # terraform init -reconfigure
+            # terraform destroy -auto-approve
+            terraform destroy -var do_token=\$DIGITAL_OCEAN_TOKEN -var cluster_name=\$CLUSTER_NAME -auto-approve
 workflows:
   scan_deploy:
     jobs:
