@@ -133,26 +133,25 @@ jobs:
             # K8S_CLUSTER_TOKEN=$(kubectl get secret \$SECRET_NAME -n kube-system -o jsonpath='{.data.token}' | base64 --decode)
 
 
-            # --- Create service account and extract token ---
-            kubectl create serviceaccount tf-admin -n kube-system || true
-            kubectl create clusterrolebinding tf-admin-binding --clusterrole=cluster-admin --serviceaccount=kube-system:tf-admin || true
+            # Check if service account exists
+            if ! kubectl get serviceaccount tf-admin -n kube-system >/dev/null 2>&1; then
+              kubectl create serviceaccount tf-admin -n kube-system
+            fi
 
-            # Wait for the secret to be created
-            for i in {1..10}; do
-              SECRET_NAME=\$(kubectl get serviceaccount tf-admin -n kube-system -o jsonpath='{.secrets[0].name}')
-              if [ -n "\$SECRET_NAME" ]; then
-                break
-              fi
-              echo "Waiting for tf-admin service account secret..."
-              sleep 2
-            done
+            # Check if clusterrolebinding exists
+            if ! kubectl get clusterrolebinding tf-admin-binding >/dev/null 2>&1; then
+              kubectl create clusterrolebinding tf-admin-binding --clusterrole=cluster-admin --serviceaccount=kube-system:tf-admin
+            fi
 
-            if [ -z "\$SECRET_NAME" ]; then
-              echo "ERROR: tf-admin service account secret not found!"
+            # Try to get the secret name (may be empty if not created yet)
+            SECRET_NAME=$(kubectl get serviceaccount tf-admin -n kube-system -o jsonpath='{.secrets[0].name}')
+
+            if [ -z "$SECRET_NAME" ]; then
+              echo "ERROR: tf-admin service account secret not found! (It may not be created yet, or your cluster uses projected tokens.)"
               exit 1
             fi
 
-            K8S_CLUSTER_TOKEN=\$(kubectl get secret \$SECRET_NAME -n kube-system -o jsonpath='{.data.token}' | base64 --decode)            
+            K8S_CLUSTER_TOKEN=$(kubectl get secret $SECRET_NAME -n kube-system -o jsonpath='{.data.token}' | base64 --decode)            
 
             # Extract Kubernetes Cluster Information
             export K8S_CLUSTER_ENDPOINT=\$(kubectl config view -o jsonpath='{.clusters[0].cluster.server}')
