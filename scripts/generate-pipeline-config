@@ -132,7 +132,6 @@ jobs:
             # SECRET_NAME=\$(kubectl get serviceaccount tf-admin -n kube-system -o jsonpath='{.secrets[0].name}')
             # K8S_CLUSTER_TOKEN=$(kubectl get secret \$SECRET_NAME -n kube-system -o jsonpath='{.data.token}' | base64 --decode)
 
-
             # Create the service account if it doesn't exist
             if ! kubectl get serviceaccount tf-admin -n kube-system >/dev/null 2>&1; then
               kubectl create serviceaccount tf-admin -n kube-system
@@ -148,10 +147,7 @@ jobs:
               kubectl create secret generic tf-admin-token \
                 --namespace kube-system \
                 --type kubernetes.io/service-account-token \
-                --from-literal=extra=val \
-                --dry-run=client -o yaml | \
-                kubectl set subject --serviceaccount=tf-admin -n kube-system -f - | \
-                kubectl apply -f -
+              kubectl patch secret tf-admin-token -n kube-system -p '{"metadata":{"annotations":{"kubernetes.io/service-account.name":"tf-admin"}}}'
             fi
 
             # Wait for the token to be populated in the secret
@@ -167,11 +163,7 @@ jobs:
             if [ -z "\$K8S_CLUSTER_TOKEN" ]; then
               echo "ERROR: tf-admin-token secret not found or token not populated!"
               exit 1
-            fi           
-
-            # Extract Kubernetes Cluster Information
-            export K8S_CLUSTER_ENDPOINT=\$(kubectl config view -o jsonpath='{.clusters[0].cluster.server}')
-            export K8S_CLUSTER_CA_CERTIFICATE=\$(kubectl config view --raw -o jsonpath='{.clusters[0].cluster.certificate-authority-data}')
+            fi         
 
             # Extract Kubernetes Cluster Information
             export K8S_CLUSTER_ENDPOINT=\$(kubectl config view -o jsonpath='{.clusters[0].cluster.server}')
