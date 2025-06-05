@@ -144,14 +144,14 @@ jobs:
             fi
 
             # Try to get the secret name (may be empty if not created yet)
-            SECRET_NAME=$(kubectl get serviceaccount tf-admin -n kube-system -o jsonpath='{.secrets[0].name}')
+            SECRET_NAME=\$(kubectl get serviceaccount tf-admin -n kube-system -o jsonpath='{.secrets[0].name}')
 
-            if [ -z "$SECRET_NAME" ]; then
+            if [ -z "\$SECRET_NAME" ]; then
               echo "ERROR: tf-admin service account secret not found! (It may not be created yet, or your cluster uses projected tokens.)"
               exit 1
             fi
 
-            K8S_CLUSTER_TOKEN=$(kubectl get secret $SECRET_NAME -n kube-system -o jsonpath='{.data.token}' | base64 --decode)            
+            K8S_CLUSTER_TOKEN=\$(kubectl get secret \$SECRET_NAME -n kube-system -o jsonpath='{.data.token}' | base64 --decode)            
 
             # Extract Kubernetes Cluster Information
             export K8S_CLUSTER_ENDPOINT=\$(kubectl config view -o jsonpath='{.clusters[0].cluster.server}')
