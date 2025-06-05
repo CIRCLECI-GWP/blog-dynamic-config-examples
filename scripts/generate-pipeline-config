@@ -126,10 +126,33 @@ jobs:
             export KUBECONFIG=\$HOME/.kube/config
 
             # --- Create service account and extract token ---
+            # kubectl create serviceaccount tf-admin -n kube-system || true
+            # kubectl create clusterrolebinding tf-admin-binding --clusterrole=cluster-admin --serviceaccount=kube-system:tf-admin || true
+
+            # SECRET_NAME=\$(kubectl get serviceaccount tf-admin -n kube-system -o jsonpath='{.secrets[0].name}')
+            # K8S_CLUSTER_TOKEN=$(kubectl get secret \$SECRET_NAME -n kube-system -o jsonpath='{.data.token}' | base64 --decode)
+
+
+            # --- Create service account and extract token ---
             kubectl create serviceaccount tf-admin -n kube-system || true
             kubectl create clusterrolebinding tf-admin-binding --clusterrole=cluster-admin --serviceaccount=kube-system:tf-admin || true
-            SECRET_NAME=\$(kubectl get serviceaccount tf-admin -n kube-system -o jsonpath='{.secrets[0].name}')
-            K8S_CLUSTER_TOKEN=$(kubectl get secret \$SECRET_NAME -n kube-system -o jsonpath='{.data.token}' | base64 --decode)
+
+            # Wait for the secret to be created
+            for i in {1..10}; do
+              SECRET_NAME=\$(kubectl get serviceaccount tf-admin -n kube-system -o jsonpath='{.secrets[0].name}')
+              if [ -n "\$SECRET_NAME" ]; then
+                break
+              fi
+              echo "Waiting for tf-admin service account secret..."
+              sleep 2
+            done
+
+            if [ -z "\$SECRET_NAME" ]; then
+              echo "ERROR: tf-admin service account secret not found!"
+              exit 1
+            fi
+
+            K8S_CLUSTER_TOKEN=\$(kubectl get secret \$SECRET_NAME -n kube-system -o jsonpath='{.data.token}' | base64 --decode)            
 
             # Extract Kubernetes Cluster Information
             export K8S_CLUSTER_ENDPOINT=\$(kubectl config view -o jsonpath='{.clusters[0].cluster.server}')
