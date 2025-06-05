@@ -125,11 +125,20 @@ jobs:
             doctl kubernetes cluster kubeconfig save \$CLUSTER_NAME
             export KUBECONFIG=\$HOME/.kube/config
 
+            # --- Create service account and extract token ---
+            kubectl create serviceaccount tf-admin -n kube-system || true
+            kubectl create clusterrolebinding tf-admin-binding --clusterrole=cluster-admin --serviceaccount=kube-system:tf-admin || true
+            SECRET_NAME=\$(kubectl get serviceaccount tf-admin -n kube-system -o jsonpath='{.secrets[0].name}')
+            K8S_CLUSTER_TOKEN=$(kubectl get secret \$SECRET_NAME -n kube-system -o jsonpath='{.data.token}' | base64 --decode)
+
             # Extract Kubernetes Cluster Information
             export K8S_CLUSTER_ENDPOINT=\$(kubectl config view -o jsonpath='{.clusters[0].cluster.server}')
             export K8S_CLUSTER_CA_CERTIFICATE=\$(kubectl config view --raw -o jsonpath='{.clusters[0].cluster.certificate-authority-data}')
             export K8S_CLUSTER_TOKEN=\$(doctl kubernetes cluster kubeconfig exec-credential --version=v1beta1 --context=\$CLUSTER_NAME | jq -r '.status.token')
 
+            # Extract Kubernetes Cluster Information
+            export K8S_CLUSTER_ENDPOINT=\$(kubectl config view -o jsonpath='{.clusters[0].cluster.server}')
+            export K8S_CLUSTER_CA_CERTIFICATE=\$(kubectl config view --raw -o jsonpath='{.clusters[0].cluster.certificate-authority-data}')
 
             # Print for verification
             echo "KUBECONFIG is \$KUBECONFIG"
