@@ -125,13 +125,6 @@ jobs:
             doctl kubernetes cluster kubeconfig save \$CLUSTER_NAME
             export KUBECONFIG=\$HOME/.kube/config
 
-            # --- Create service account and extract token ---
-            # kubectl create serviceaccount tf-admin -n kube-system || true
-            # kubectl create clusterrolebinding tf-admin-binding --clusterrole=cluster-admin --serviceaccount=kube-system:tf-admin || true
-
-            # SECRET_NAME=\$(kubectl get serviceaccount tf-admin -n kube-system -o jsonpath='{.secrets[0].name}')
-            # K8S_CLUSTER_TOKEN=$(kubectl get secret \$SECRET_NAME -n kube-system -o jsonpath='{.data.token}' | base64 --decode)
-
             # Create the service account if it doesn't exist
             if ! kubectl get serviceaccount tf-admin -n kube-system >/dev/null 2>&1; then
               kubectl create serviceaccount tf-admin -n kube-system
@@ -146,7 +139,7 @@ jobs:
             if ! kubectl get secret tf-admin-token -n kube-system >/dev/null 2>&1; then
               kubectl create secret generic tf-admin-token \
                 --namespace kube-system \
-                --type kubernetes.io/service-account-token \
+                --type kubernetes.io/service-account-token
               kubectl patch secret tf-admin-token -n kube-system -p '{"metadata":{"annotations":{"kubernetes.io/service-account.name":"tf-admin"}}}'
             fi
 
