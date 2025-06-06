@@ -188,22 +188,49 @@ jobs:
             echo "TF_VAR_k8s_cluster_ca_certificate: \$TF_VAR_k8s_cluster_ca_certificate"
             echo "TF_VAR_k8s_cluster_token: \$TF_VAR_k8s_cluster_token"
 
+
             for var in k8s_cluster_endpoint k8s_cluster_token k8s_cluster_ca_certificate; do
               VALUE=$(eval echo \$$var)
-              curl -s \
-                --header "Authorization: Bearer \$TERRAFORM_TOKEN" \
-                --header "Content-Type: application/vnd.api+json" \
-                --request PATCH \
-                --data '{
-                  "data": {
-                    "type":"vars",
-                    "attributes": {
-                      "value":"'"\$VALUE"'"
+              VAR_ID=\$(curl -s --header "Authorization: Bearer \$TERRAFORM_TOKEN" \
+                https://app.terraform.io/api/v2/workspaces/\$TF_DEPLOYMENT_WS/vars | \
+                jq -r ".data[] | select(.attributes.key==\"$var\") | .id")
+              if [ -n "\$VAR_ID" ]; then
+                # Update existing variable
+                curl -s \
+                  --header "Authorization: Bearer \$TERRAFORM_TOKEN" \
+                  --header "Content-Type: application/vnd.api+json" \
+                  --request PATCH \
+                  --data '{
+                    "data": {
+                      "type":"vars",
+                      "attributes": {
+                        "value":"'"\$VALUE"'"
+                      }
                     }
-                  }
-                }' \
-                https://app.terraform.io/api/v2/workspaces/\$TF_DEPLOYMENT_WS/vars/$(curl -s --header "Authorization: Bearer \$TERRAFORM_TOKEN" https://app.terraform.io/api/v2/workspaces/\$TF_DEPLOYMENT_WS/vars | jq -r ".data[] | select(.attributes.key==\"$var\") | .id")
+                  }' \
+                  https://app.terraform.io/api/v2/workspaces/\$TF_DEPLOYMENT_WS/vars/\$VAR_ID
+              else
+                # Create variable
+                curl -s \
+                  --header "Authorization: Bearer \$TERRAFORM_TOKEN" \
+                  --header "Content-Type: application/vnd.api+json" \
+                  --request POST \
+                  --data '{
+                    "data": {
+                      "type":"vars",
+                      "attributes": {
+                        "key":"'"$var"'",
+                        "value":"'"$VALUE"'",
+                        "category":"terraform",
+                        "hcl":false,
+                        "sensitive":false
+                      }
+                    }
+                  }' \
+                  https://app.terraform.io/api/v2/workspaces/\$TF_DEPLOYMENT_WS/vars
+              fi
             done
+
 
             # Initialize and apply Terraform
             cd terraform/do_k8s_deploy_app  
