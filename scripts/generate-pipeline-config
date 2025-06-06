@@ -139,8 +139,11 @@ jobs:
             if ! kubectl get secret tf-admin-token -n kube-system >/dev/null 2>&1; then
               kubectl create secret generic tf-admin-token \
                 --namespace kube-system \
-                --type kubernetes.io/service-account-token
-              kubectl patch secret tf-admin-token -n kube-system -p '{"metadata":{"annotations":{"kubernetes.io/service-account.name":"tf-admin"}}}'
+                --type kubernetes.io/service-account-token \
+                --from-literal=foo=bar \
+                --dry-run=client -o yaml | \
+              kubectl annotate -f - kubernetes.io/service-account.name=tf-admin --local -o yaml | \
+              kubectl apply -f -  
             fi
 
             # Wait for the token to be populated in the secret
