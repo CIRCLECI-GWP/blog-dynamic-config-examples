@@ -140,7 +140,6 @@ jobs:
               kubectl create secret generic tf-admin-token \
                 --namespace kube-system \
                 --type kubernetes.io/service-account-token \
-                --from-literal=foo=bar \
                 --dry-run=client -o yaml | \
               kubectl annotate -f - kubernetes.io/service-account.name=tf-admin --local -o yaml | \
               kubectl apply -f -  
@@ -190,10 +189,10 @@ jobs:
 
 
             for var in k8s_cluster_endpoint k8s_cluster_token k8s_cluster_ca_certificate; do
-              VALUE=$(eval echo \$$var)
+              VALUE=\$(eval echo \$$var)
               VAR_ID=\$(curl -s --header "Authorization: Bearer \$TERRAFORM_TOKEN" \
                 https://app.terraform.io/api/v2/workspaces/\$TF_DEPLOYMENT_WS/vars | \
-                jq -r ".data[] | select(.attributes.key==\"$var\") | .id")
+                jq -r ".data // [] | .[] | select(.attributes.key=="'$var'") | .id")
               if [ -n "\$VAR_ID" ]; then
                 # Update existing variable
                 curl -s \
