@@ -231,7 +231,7 @@ jobs:
             done
 
 
-            # Initialize and apply Terraform
+            # Initialize and apply Terraform.
             cd terraform/do_k8s_deploy_app  
             terraform init
             terraform apply -auto-approve
