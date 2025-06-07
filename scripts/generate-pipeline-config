@@ -229,7 +229,9 @@ jobs:
                   https://app.terraform.io/api/v2/workspaces/\$TF_DEPLOYMENT_WS/vars
               fi
             done
-
+      - run:
+          name: Wait for TFC variable propagation
+          command: sleep 20
   remote_terraform_apply:
     docker:
       - image: cimg/node:24.0.2
