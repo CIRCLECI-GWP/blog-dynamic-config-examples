@@ -235,6 +235,9 @@ jobs:
       - image: cimg/node:24.0.2
     steps:
       - checkout
+      - run:
+          name: Create .terraformrc file locally
+          command: echo "credentials \"app.terraform.io\" {token = \"\$TERRAFORM_TOKEN\"}" > \$HOME/.terraformrc
       - terraform/install:
           terraform_version: $TF_VERSION
           arch: "amd64"
