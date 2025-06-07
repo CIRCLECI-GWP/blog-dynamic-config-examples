@@ -230,11 +230,6 @@ jobs:
               fi
             done
 
-      - persist_to_workspace:
-          root: /tmp/do_k8s
-          paths:
-            - "*"
-
   remote_terraform_apply:
     docker:
       - image: cimg/node:24.0.2
@@ -255,7 +250,11 @@ jobs:
             # Save the Load Balancer Public IP Address
             export ENDPOINT="\$(terraform output lb_public_ip)"
             mkdir -p /tmp/do_k8s
-            echo 'export ENDPOINT='\${ENDPOINT} > /tmp/do_k8s/dok8s-endpoint         
+            echo 'export ENDPOINT='\${ENDPOINT} > /tmp/do_k8s/dok8s-endpoint
+      - persist_to_workspace:
+          root: /tmp/do_k8s
+          paths:
+            - "*"         
   smoketest_k8s_deployment:
     docker:
       - image: cimg/node:24.0.2
