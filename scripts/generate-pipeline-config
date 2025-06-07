@@ -230,20 +230,32 @@ jobs:
               fi
             done
 
+      - persist_to_workspace:
+          root: /tmp/do_k8s
+          paths:
+            - "*"
 
-            # Initialize and apply Terraform.
-            cd terraform/do_k8s_deploy_app  
-            terraform init
+  remote_terraform_apply:
+    docker:
+      - image: cimg/node:24.0.2
+    steps:
+      - checkout
+      - terraform/install:
+          terraform_version: $TF_VERSION
+          arch: "amd64"
+          os: "linux"
+      - terraform/init:
+          path: ./terraform/do_k8s_deploy_app
+      - run:
+          name: Terraform Apply (remote backend)
+          command: |
+            cd terraform/do_k8s_deploy_app
             terraform apply -auto-approve
             
             # Save the Load Balancer Public IP Address
             export ENDPOINT="\$(terraform output lb_public_ip)"
             mkdir -p /tmp/do_k8s
-            echo 'export ENDPOINT='\${ENDPOINT} > /tmp/do_k8s/dok8s-endpoint
-      - persist_to_workspace:
-          root: /tmp/do_k8s
-          paths:
-            - "*"
+            echo 'export ENDPOINT='\${ENDPOINT} > /tmp/do_k8s/dok8s-endpoint         
   smoketest_k8s_deployment:
     docker:
       - image: cimg/node:24.0.2
@@ -302,9 +314,12 @@ workflows:
           requires:
             - create_do_k8s_cluster
             - scan_push_docker_image
-      - smoketest_k8s_deployment:
+      - remote_terraform_apply:
           requires:
             - deploy_to_k8s
+      - smoketest_k8s_deployment:
+          requires:
+            - remote_terraform_apply
       - approve_destroy:
           type: approval
           requires:
