@@ -192,7 +192,7 @@ jobs:
               VALUE=\$(eval echo \$$var)
               VAR_ID=\$(curl -s --header "Authorization: Bearer \$TERRAFORM_TOKEN" \
                 https://app.terraform.io/api/v2/workspaces/\$TF_DEPLOYMENT_WS/vars | \
-                jq -r ".data // [] | .[] | select(.attributes.key=="'$var'") | .id")
+                jq -r ".data // [] | .[] | select(.attributes.key==\"\$var\") | .id")
               if [ -n "\$VAR_ID" ]; then
                 # Update existing variable
                 curl -s \
@@ -203,7 +203,7 @@ jobs:
                     "data": {
                       "type":"vars",
                       "attributes": {
-                        "value":"'"\$VALUE"'"
+                         "value":"'"'"'\$VALUE'"'"'"
                       }
                     }
                   }' \
@@ -218,8 +218,8 @@ jobs:
                     "data": {
                       "type":"vars",
                       "attributes": {
-                        "key":"'"$var"'",
-                        "value":"'"$VALUE"'",
+                        "key":"'"'"'\$var'"'"'",
+                        "value":"'"'"'\$VALUE'"'"'",
                         "category":"terraform",
                         "hcl":false,
                         "sensitive":false
